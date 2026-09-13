@@ -2,8 +2,8 @@ package com.fortunetowers.managers;
 
 import com.fortunetowers.FortuneTowers;
 import com.fortunetowers.objects.Arena;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -14,9 +14,79 @@ public class ArenaManager {
 
     private final FortuneTowers plugin;
     private final Map<String, Arena> arenas = new HashMap<>();
+    private File file;
+    private FileConfiguration config;
 
     public ArenaManager(FortuneTowers plugin) {
         this.plugin = plugin;
+        loadArenas();
+    }
+
+    public void loadArenas() {
+        file = new File(plugin.getDataFolder(), "arenas.yml");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        config = YamlConfiguration.loadConfiguration(file);
+
+        for (String key : config.getKeys(false)) {
+            Arena arena = new Arena(key);
+            arena.setPos1(config.getLocation(key + ".pos1"));
+            arena.setPos2(config.getLocation(key + ".pos2"));
+            arena.setLobby(config.getLocation(key + ".lobby"));
+            arena.setSpecSpawn(config.getLocation(key + ".specspawn"));
+            arena.setIntervalSeconds(config.getInt(key + ".interval", 3));
+
+            List<?> list = config.getList(key + ".spawns");
+            if (list != null) {
+                for (Object item : list) {
+                    if (item instanceof Location loc) {
+                        arena.getSpawns().add(loc);
+                    }
+                }
+            }
+
+            arenas.put(key.toLowerCase(), arena);
+        }
+    }
+
+    public void saveArena(Arena arena) {
+        String key = arena.getName();
+        config.set(key + ".pos1", arena.getPos1());
+        config.set(key + ".pos2", arena.getPos2());
+        config.set(key + ".lobby", arena.getLobby());
+        config.set(key + ".specspawn", arena.getSpecSpawn());
+        config.set(key + ".interval", arena.getIntervalSeconds());
+        config.set(key + ".spawns", arena.getSpawns());
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createArena(String name) {
+        Arena arena = new Arena(name);
+        arenas.put(name.toLowerCase(), arena);
+        saveArena(arena);
+    }
+
+    public void removeArena(String name) {
+        Arena arena = arenas.remove(name.toLowerCase());
+        if (arena != null) {
+            if (arena.isRunning()) arena.stop();
+            config.set(name, null);
+            try {
+                config.save(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public Arena getArena(String name) {
@@ -25,62 +95,5 @@ public class ArenaManager {
 
     public Collection<Arena> getArenas() {
         return arenas.values();
-    }
-
-    public void createArena(String name) {
-        arenas.put(name.toLowerCase(), new Arena(name));
-        saveArena(getArena(name));
-    }
-
-    public void removeArena(String name) {
-        Arena a = arenas.remove(name.toLowerCase());
-        if (a != null) {
-            File file = new File(plugin.getDataFolder() + "/arenas/" + name + ".yml");
-            if (file.exists()) file.delete();
-        }
-    }
-
-    public void stopAllGames() {
-        for (Arena a : arenas.values()) {
-            if (a.isRunning()) a.stop();
-        }
-    }
-
-    public void loadArenas() {
-        File dir = new File(plugin.getDataFolder(), "arenas");
-        if (!dir.exists()) dir.mkdirs();
-
-        for (File f : dir.listFiles((d, name) -> name.endsWith(".yml"))) {
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-            String name = f.getName().replace(".yml", "");
-            Arena arena = new Arena(name);
-
-            if (config.contains("pos1")) arena.setPos1(config.getLocation("pos1"));
-            if (config.contains("pos2")) arena.setPos2(config.getLocation("pos2"));
-            if (config.contains("lobby")) arena.setLobby(config.getLocation("lobby"));
-            arena.setIntervalSeconds(config.getInt("interval", 3));
-
-            List<Location> spawns = (List<Location>) config.getList("spawns");
-            if (spawns != null) arena.getSpawns().addAll(spawns);
-
-            arenas.put(name.toLowerCase(), arena);
-        }
-    }
-
-    public void saveArena(Arena arena) {
-        File file = new File(plugin.getDataFolder() + "/arenas", arena.getName() + ".yml");
-        YamlConfiguration config = new YamlConfiguration();
-
-        config.set("pos1", arena.getPos1());
-        config.set("pos2", arena.getPos2());
-        config.set("lobby", arena.getLobby());
-        config.set("interval", arena.getIntervalSeconds());
-        config.set("spawns", arena.getSpawns());
-
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
