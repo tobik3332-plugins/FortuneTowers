@@ -127,12 +127,12 @@ public class Arena {
 
             for (UUID activeUUID : activePlayers) {
                 Player active = Bukkit.getPlayer(activeUUID);
-                if (active != null) active.hidePlayer(FortuneTowers.getInstance(), spec);
+                if (active != null) active.hidePlayer(spec);
             }
 
             for (UUID otherSpecUUID : spectators) {
                 Player otherSpec = Bukkit.getPlayer(otherSpecUUID);
-                if (otherSpec != null) spec.showPlayer(FortuneTowers.getInstance(), otherSpec);
+                if (otherSpec != null) spec.showPlayer(otherSpec);
             }
         }
     }
