@@ -4,9 +4,15 @@ import com.fortunetowers.commands.TowersCommand;
 import com.fortunetowers.listeners.GameEventListener;
 import com.fortunetowers.managers.ArenaManager;
 import com.fortunetowers.managers.PlayerDataManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.defaults.BukkitCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 public class FortuneTowers extends JavaPlugin {
 
@@ -23,19 +29,43 @@ public class FortuneTowers extends JavaPlugin {
         this.arenaManager = new ArenaManager(this);
         this.arenaManager.loadArenas();
 
-        // Bezpecna registrace prikazu z plugin.yml
-        PluginCommand towersCmd = getCommand("towers");
-        if (towersCmd != null) {
-            TowersCommand executor = new TowersCommand(this);
-            towersCmd.setExecutor(executor);
-            towersCmd.setTabCompleter(executor);
-        } else {
-            getLogger().severe("Prikaz 'towers' se nepodarilo najit v plugin.yml!");
-        }
+        // Dynamicka registrace prikazu pres CommandMap (kompatibilni s modernim Paperem)
+        registerCustomCommand();
 
         getServer().getPluginManager().registerEvents(new GameEventListener(this), this);
 
         getLogger().info("FortuneTowers plugin byl uspesne zapnut!");
+    }
+
+    private void registerCustomCommand() {
+        try {
+            Field commandMapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+            commandMapField.setAccessible(true);
+            CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getServer());
+
+            TowersCommand handler = new TowersCommand(this);
+
+            BukkitCommand customCmd = new BukkitCommand("towers") {
+                @Override
+                public boolean execute(org.bukkit.command.CommandSender sender, String commandLabel, String[] args) {
+                    return handler.onCommand(sender, this, commandLabel, args);
+                }
+
+                @Override
+                public List<String> tabComplete(org.bukkit.command.CommandSender sender, String alias, String[] args) {
+                    return handler.onTabComplete(sender, this, alias, args);
+                }
+            };
+
+            customCmd.setDescription("Hlavni prikaz pro FortuneTowers");
+            customCmd.setPermission("towers.use");
+            customCmd.setUsage("/towers");
+
+            commandMap.register("fortunetowers", customCmd);
+        } catch (Exception e) {
+            getLogger().severe("Chyba pri registraci prikazu /towers: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
