@@ -1,6 +1,7 @@
 package com.fortunetowers.managers;
 
 import com.fortunetowers.FortuneTowers;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -27,10 +28,21 @@ public class PlayerDataManager {
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20.0);
         player.setFoodLevel(20);
+        player.setAllowFlight(false);
+        player.setFlying(false);
     }
 
     public void restorePlayer(Player player) {
         UUID uuid = player.getUniqueId();
+
+        // Zviditelnit hrace pro vsechny
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            other.showPlayer(FortuneTowers.getInstance(), player);
+            player.showPlayer(FortuneTowers.getInstance(), other);
+        }
+
+        player.setAllowFlight(false);
+        player.setFlying(false);
 
         if (savedInventories.containsKey(uuid)) {
             player.getInventory().clear();
@@ -40,7 +52,6 @@ public class PlayerDataManager {
             savedGameModes.remove(uuid);
         }
 
-        // Teleport do MainLobby z configu
         Location mainLobby = FortuneTowers.getInstance().getConfig().getLocation("main-lobby");
         if (mainLobby != null) {
             player.teleport(mainLobby);
