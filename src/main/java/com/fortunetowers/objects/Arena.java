@@ -16,6 +16,7 @@ public class Arena {
     private Location pos1;
     private Location pos2;
     private Location lobby;
+    private Location specSpawn;
     private final List<Location> spawns = new ArrayList<>();
     private int intervalSeconds = 3;
 
@@ -38,6 +39,12 @@ public class Arena {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) p.sendMessage(message);
         }
+    }
+
+    public Location getSpectatorSpawnLocation() {
+        if (specSpawn != null) return specSpawn;
+        if (!spawns.isEmpty()) return spawns.get(0);
+        return lobby;
     }
 
     public void saveSnapshot() {
@@ -83,7 +90,8 @@ public class Arena {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
                 makeSpectator(p);
-                if (!spawns.isEmpty()) p.teleport(spawns.get(0));
+                Location loc = getSpectatorSpawnLocation();
+                if (loc != null) p.teleport(loc);
             }
         }
 
@@ -117,13 +125,11 @@ public class Arena {
             Player spec = Bukkit.getPlayer(specUUID);
             if (spec == null) continue;
 
-            // Skryt spectatora pred hraci ve hre
             for (UUID activeUUID : activePlayers) {
                 Player active = Bukkit.getPlayer(activeUUID);
                 if (active != null) active.hidePlayer(FortuneTowers.getInstance(), spec);
             }
 
-            // Spectatori se navzajem vidi
             for (UUID otherSpecUUID : spectators) {
                 Player otherSpec = Bukkit.getPlayer(otherSpecUUID);
                 if (otherSpec != null) spec.showPlayer(FortuneTowers.getInstance(), otherSpec);
@@ -228,11 +234,8 @@ public class Arena {
             if (p == null) continue;
             Location loc = p.getLocation();
             if (loc.getBlockX() < minX || loc.getBlockX() > maxX || loc.getBlockZ() < minZ || loc.getBlockZ() > maxZ) {
-                if (!spawns.isEmpty()) {
-                    p.teleport(spawns.get(0));
-                } else if (lobby != null) {
-                    p.teleport(lobby);
-                }
+                Location specLoc = getSpectatorSpawnLocation();
+                if (specLoc != null) p.teleport(specLoc);
             }
         }
     }
@@ -244,6 +247,8 @@ public class Arena {
     public void setPos2(Location pos2) { this.pos2 = pos2; }
     public Location getLobby() { return lobby; }
     public void setLobby(Location lobby) { this.lobby = lobby; }
+    public Location getSpecSpawn() { return specSpawn; }
+    public void setSpecSpawn(Location specSpawn) { this.specSpawn = specSpawn; }
     public List<Location> getSpawns() { return spawns; }
     public int getIntervalSeconds() { return intervalSeconds; }
     public void setIntervalSeconds(int intervalSeconds) { this.intervalSeconds = intervalSeconds; }
