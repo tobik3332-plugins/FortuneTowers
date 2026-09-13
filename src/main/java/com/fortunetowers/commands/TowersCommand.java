@@ -173,6 +173,26 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (sub.equals("joinspec") && args.length >= 3) {
+            if (!sender.hasPermission("towers.permission.joinspec")) return noPerm(sender);
+            Arena arena = plugin.getArenaManager().getArena(args[1]);
+            Player target = Bukkit.getPlayer(args[2]);
+            if (arena != null && target != null) {
+                plugin.getPlayerDataManager().saveAndClearPlayer(target);
+                arena.getSpectators().add(target.getUniqueId());
+                if (arena.getLobby() != null) target.teleport(arena.getLobby());
+
+                if (arena.isRunning()) {
+                    arena.makeSpectator(target);
+                    if (!arena.getSpawns().isEmpty()) target.teleport(arena.getSpawns().get(0));
+                    arena.updateVisibility();
+                }
+
+                sender.sendMessage(plugin.getMsg("player-joined-spec").replace("%player%", target.getName()).replace("%arena%", arena.getName()));
+            }
+            return true;
+        }
+
         if (sub.equals("leave") && args.length >= 3) {
             if (!sender.hasPermission("towers.permission.leave")) return noPerm(sender);
             Arena arena = plugin.getArenaManager().getArena(args[1]);
@@ -219,14 +239,14 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         List<String> suggestions = new ArrayList<>();
 
         if (args.length == 1) {
-            return Arrays.asList("arena", "join", "leave", "start", "stop", "setmainlobby", "removemainlobby", "reload");
+            return Arrays.asList("arena", "join", "joinspec", "leave", "start", "stop", "setmainlobby", "removemainlobby", "reload");
         }
 
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("arena")) {
                 return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setlobby", "removelobby", "interval", "remove");
             }
-            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("leave") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop")) {
+            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("joinspec") || args[0].equalsIgnoreCase("leave") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop")) {
                 for (Arena a : plugin.getArenaManager().getArenas()) {
                     suggestions.add(a.getName());
                 }
@@ -241,7 +261,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 }
                 return suggestions;
             }
-            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("leave")) {
+            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("joinspec") || args[0].equalsIgnoreCase("leave")) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     suggestions.add(p.getName());
                 }
