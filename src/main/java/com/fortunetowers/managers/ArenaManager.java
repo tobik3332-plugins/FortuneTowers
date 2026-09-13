@@ -22,6 +22,14 @@ public class ArenaManager {
         loadArenas();
     }
 
+    public void stopAllGames() {
+        for (Arena arena : arenas.values()) {
+            if (arena.isRunning()) {
+                arena.stop();
+            }
+        }
+    }
+
     public void loadArenas() {
         file = new File(plugin.getDataFolder(), "arenas.yml");
         if (!file.exists()) {
