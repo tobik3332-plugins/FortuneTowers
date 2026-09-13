@@ -1,5 +1,7 @@
 # FortuneTowers Configuration
 
+main-lobby: null
+
 messages:
   prefix: "&8[&eFortuneTowers&8] "
   no-permission: "&cNa tento prikaz nemas dostatecna opravneni!"
@@ -14,6 +16,8 @@ messages:
   spawn-removed: "&aSpawn point ID &e%id% &abyl odebran."
   lobby-set: "&aLobby pro arenu &e%arena% &abylo nastaveno."
   lobby-removed: "&aLobby pro arenu &e%arena% &abylo zruseno."
+  mainlobby-set: "&aHlavni lobby serveru bylo uspesne nastaveno!"
+  mainlobby-removed: "&cHlavni lobby serveru bylo zruseno."
   interval-set: "&aInterval davanii itemu pro arenu &e%arena% &anastaven na &e%sec%s&a."
   player-joined: "&aHrac &e%player% &abyl pridat do areny &e%arena%&a."
   player-left: "&cHrac &e%player% &abyl odpojen z areny &e%arena%&a."
@@ -23,12 +27,10 @@ messages:
   border-warning-subtitle: "&7Vrat se ihned zpet do areny!"
   reloaded: "&aKonfigurace byla uspesne znovu nactena!"
 
-# Whitelist prikazu povolenych behem hry
 allowed-commands-in-game:
   - "/towers leave"
   - "/msg"
 
-# Blacklist itemu, ktere hraci nemohou dostat (Format: MATERIAL_NAME)
 item-blacklist:
   - "OPERATOR_PERSPECTIVE_EGG"
   - "COMMAND_BLOCK"
@@ -41,7 +43,6 @@ item-blacklist:
   - "AXOLOTL_SPAWN_EGG"
   - "BAT_SPAWN_EGG"
 
-# Prehled permisii (dokumentacni prehled)
 permissions-list:
   towers.admin: "Pristup ke vsem prikazum"
   towers.permission.arena.create: "Vytvoreni areny"
@@ -51,6 +52,8 @@ permissions-list:
   towers.permission.arena.removespawn: "Odebrani spawnu"
   towers.permission.arena.setlobby: "Nastaveni lobby"
   towers.permission.arena.removelobby: "Zruseni lobby"
+  towers.permission.setmainlobby: "Nastaveni hlavniho lobby"
+  towers.permission.removemainlobby: "Zruseni hlavniho lobby"
   towers.permission.arena.interval: "Nastaveni intervalu"
   towers.permission.join: "Pridani hrace do hry"
   towers.permission.leave: "Odebrani hrace ze hry"
