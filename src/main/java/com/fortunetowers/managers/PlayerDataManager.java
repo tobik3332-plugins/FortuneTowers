@@ -1,6 +1,8 @@
 package com.fortunetowers.managers;
 
+import com.fortunetowers.FortuneTowers;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,12 +31,23 @@ public class PlayerDataManager {
 
     public void restorePlayer(Player player) {
         UUID uuid = player.getUniqueId();
-        if (!savedInventories.containsKey(uuid)) return;
 
-        player.getInventory().clear();
-        player.getInventory().setContents(savedInventories.remove(uuid));
-        player.getInventory().setArmorContents(savedArmor.remove(uuid));
-        player.setGameMode(savedGameModes.getOrDefault(uuid, GameMode.SURVIVAL));
-        savedGameModes.remove(uuid);
+        if (savedInventories.containsKey(uuid)) {
+            player.getInventory().clear();
+            player.getInventory().setContents(savedInventories.remove(uuid));
+            player.getInventory().setArmorContents(savedArmor.remove(uuid));
+            player.setGameMode(savedGameModes.getOrDefault(uuid, GameMode.SURVIVAL));
+            savedGameModes.remove(uuid);
+        }
+
+        // Teleport do MainLobby z configu
+        Location mainLobby = FortuneTowers.getInstance().getConfig().getLocation("main-lobby");
+        if (mainLobby != null) {
+            player.teleport(mainLobby);
+        }
+    }
+
+    public boolean hasSavedData(UUID uuid) {
+        return savedInventories.containsKey(uuid);
     }
 }
