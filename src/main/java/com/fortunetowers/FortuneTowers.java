@@ -5,6 +5,7 @@ import com.fortunetowers.listeners.GameEventListener;
 import com.fortunetowers.managers.ArenaManager;
 import com.fortunetowers.managers.PlayerDataManager;
 import org.bukkit.ChatColor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FortuneTowers extends JavaPlugin {
@@ -22,8 +23,15 @@ public class FortuneTowers extends JavaPlugin {
         this.arenaManager = new ArenaManager(this);
         this.arenaManager.loadArenas();
 
-        getCommand("towers").setExecutor(new TowersCommand(this));
-        getCommand("towers").setTabCompleter(new TowersCommand(this));
+        // Bezpecna registrace prikazu z plugin.yml
+        PluginCommand towersCmd = getCommand("towers");
+        if (towersCmd != null) {
+            TowersCommand executor = new TowersCommand(this);
+            towersCmd.setExecutor(executor);
+            towersCmd.setTabCompleter(executor);
+        } else {
+            getLogger().severe("Prikaz 'towers' se nepodarilo najit v plugin.yml!");
+        }
 
         getServer().getPluginManager().registerEvents(new GameEventListener(this), this);
 
