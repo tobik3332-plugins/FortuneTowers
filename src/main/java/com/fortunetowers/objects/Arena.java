@@ -70,7 +70,6 @@ public class Arena {
             }
         }
 
-        // Timer pro rozdávání itemů
         itemTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -78,7 +77,6 @@ public class Arena {
             }
         }.runTaskTimer(FortuneTowers.getInstance(), 20L * intervalSeconds, 20L * intervalSeconds);
 
-        // Timer pro kontrolu hranic a poškození
         borderTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -98,10 +96,10 @@ public class Arena {
         for (UUID uuid : all) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
-                if (lobby != null) p.teleport(lobby);
-                p.setGameMode(GameMode.SURVIVAL);
+                FortuneTowers.getInstance().getPlayerDataManager().restorePlayer(p);
             }
         }
+        activePlayers.clear();
         spectators.clear();
         rollback();
     }
@@ -147,13 +145,11 @@ public class Arena {
             int pX = loc.getBlockX();
             int pZ = loc.getBlockZ();
 
-            // Mimo hranici -> instant kill
             if (pX < minX || pX > maxX || pZ < minZ || pZ > maxZ) {
                 p.setHealth(0.0);
                 continue;
             }
 
-            // Blizko hranice (5 bloku)
             int distToEdge = Math.min(
                 Math.min(pX - minX, maxX - pX),
                 Math.min(pZ - minZ, maxZ - pZ)
@@ -166,7 +162,6 @@ public class Arena {
             }
         }
 
-        // Kontrola Spectatorů
         for (UUID uuid : spectators) {
             Player p = Bukkit.getPlayer(uuid);
             if (p == null) continue;
@@ -181,7 +176,6 @@ public class Arena {
         }
     }
 
-    // Gettery a settery
     public String getName() { return name; }
     public Location getPos1() { return pos1; }
     public void setPos1(Location pos1) { this.pos1 = pos1; }
