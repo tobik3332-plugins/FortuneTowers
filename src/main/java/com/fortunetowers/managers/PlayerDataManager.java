@@ -35,10 +35,9 @@ public class PlayerDataManager {
     public void restorePlayer(Player player) {
         UUID uuid = player.getUniqueId();
 
-        // Zviditelnit hrace pro vsechny
         for (Player other : Bukkit.getOnlinePlayers()) {
-            other.showPlayer(FortuneTowers.getInstance(), player);
-            player.showPlayer(FortuneTowers.getInstance(), other);
+            other.showPlayer(player);
+            player.showPlayer(other);
         }
 
         player.setAllowFlight(false);
