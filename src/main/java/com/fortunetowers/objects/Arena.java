@@ -31,6 +31,15 @@ public class Arena {
         this.name = name;
     }
 
+    public void broadcast(String message) {
+        Set<UUID> all = new HashSet<>(activePlayers);
+        all.addAll(spectators);
+        for (UUID uuid : all) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) p.sendMessage(message);
+        }
+    }
+
     public void saveSnapshot() {
         originalBlocks.clear();
         if (pos1 == null || pos2 == null) return;
@@ -70,6 +79,16 @@ public class Arena {
             }
         }
 
+        for (UUID uuid : spectators) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) {
+                makeSpectator(p);
+                if (!spawns.isEmpty()) p.teleport(spawns.get(0));
+            }
+        }
+
+        updateVisibility();
+
         itemTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -83,6 +102,48 @@ public class Arena {
                 checkBorders();
             }
         }.runTaskTimer(FortuneTowers.getInstance(), 10L, 10L);
+    }
+
+    public void makeSpectator(Player p) {
+        p.setGameMode(GameMode.SURVIVAL);
+        p.setAllowFlight(true);
+        p.setFlying(true);
+        p.getInventory().clear();
+        p.getInventory().setArmorContents(null);
+    }
+
+    public void updateVisibility() {
+        for (UUID specUUID : spectators) {
+            Player spec = Bukkit.getPlayer(specUUID);
+            if (spec == null) continue;
+
+            // Skryt spectatora pred hraci ve hre
+            for (UUID activeUUID : activePlayers) {
+                Player active = Bukkit.getPlayer(activeUUID);
+                if (active != null) active.hidePlayer(FortuneTowers.getInstance(), spec);
+            }
+
+            // Spectatori se navzajem vidi
+            for (UUID otherSpecUUID : spectators) {
+                Player otherSpec = Bukkit.getPlayer(otherSpecUUID);
+                if (otherSpec != null) spec.showPlayer(FortuneTowers.getInstance(), otherSpec);
+            }
+        }
+    }
+
+    public void checkWinner() {
+        if (!running) return;
+
+        if (activePlayers.size() == 1) {
+            UUID winnerUUID = activePlayers.iterator().next();
+            Player winner = Bukkit.getPlayer(winnerUUID);
+            if (winner != null) {
+                broadcast(FortuneTowers.getInstance().getMsg("game-winner-broadcast").replace("%player%", winner.getName()));
+            }
+            stop();
+        } else if (activePlayers.isEmpty()) {
+            stop();
+        }
     }
 
     public void stop() {
