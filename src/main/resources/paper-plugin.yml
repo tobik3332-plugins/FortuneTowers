@@ -1,0 +1,12 @@
+name: FortuneTowers
+version: '1.0.0'
+main: com.fortunetowers.FortuneTowers
+api-version: '1.20'
+prefix: FortuneTowers
+authors: [ Developer ]
+description: FortuneTowers / LuckyTowers minigame plugin
+commands:
+  towers:
+    description: Hlavni prikaz pro FortuneTowers
+    permission: towers.use
+    usage: /towers
