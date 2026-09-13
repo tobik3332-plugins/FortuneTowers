@@ -109,6 +109,28 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
+            if (action.equals("setspecspawn") && args.length >= 3 && sender instanceof Player p) {
+                if (!p.hasPermission("towers.permission.arena.setspecspawn")) return noPerm(p);
+                Arena arena = plugin.getArenaManager().getArena(args[2]);
+                if (arena != null) {
+                    arena.setSpecSpawn(p.getLocation());
+                    plugin.getArenaManager().saveArena(arena);
+                    p.sendMessage(plugin.getMsg("specspawn-set").replace("%arena%", arena.getName()));
+                }
+                return true;
+            }
+
+            if (action.equals("removespecspawn") && args.length >= 3) {
+                if (!sender.hasPermission("towers.permission.arena.removespecspawn")) return noPerm(sender);
+                Arena arena = plugin.getArenaManager().getArena(args[2]);
+                if (arena != null) {
+                    arena.setSpecSpawn(null);
+                    plugin.getArenaManager().saveArena(arena);
+                    sender.sendMessage(plugin.getMsg("specspawn-removed").replace("%arena%", arena.getName()));
+                }
+                return true;
+            }
+
             if (action.equals("setlobby") && args.length >= 3 && sender instanceof Player p) {
                 if (!p.hasPermission("towers.permission.arena.setlobby")) return noPerm(p);
                 Arena arena = plugin.getArenaManager().getArena(args[2]);
@@ -184,7 +206,8 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
                 if (arena.isRunning()) {
                     arena.makeSpectator(target);
-                    if (!arena.getSpawns().isEmpty()) target.teleport(arena.getSpawns().get(0));
+                    org.bukkit.Location specLoc = arena.getSpectatorSpawnLocation();
+                    if (specLoc != null) target.teleport(specLoc);
                     arena.updateVisibility();
                 }
 
@@ -244,7 +267,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("arena")) {
-                return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setlobby", "removelobby", "interval", "remove");
+                return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setspecspawn", "removespecspawn", "setlobby", "removelobby", "interval", "remove");
             }
             if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("joinspec") || args[0].equalsIgnoreCase("leave") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop")) {
                 for (Arena a : plugin.getArenaManager().getArenas()) {
