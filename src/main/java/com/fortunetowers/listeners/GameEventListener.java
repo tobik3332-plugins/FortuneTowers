@@ -26,8 +26,13 @@ public class GameEventListener implements Listener {
         for (Arena arena : plugin.getArenaManager().getArenas()) {
             if (arena.getActivePlayers().contains(p.getUniqueId()) || arena.getSpectators().contains(p.getUniqueId())) {
                 String msg = e.getMessage().toLowerCase();
-                List<String> allowed = plugin.getConfig().getStringList("allowed-commands-in-game");
 
+                // Hrac ma permisi na towers prikaz -> povolit
+                if (msg.startsWith("/towers") && p.hasPermission("towers.use")) {
+                    return;
+                }
+
+                List<String> allowed = plugin.getConfig().getStringList("allowed-commands-in-game");
                 boolean isAllowed = false;
                 for (String cmd : allowed) {
                     if (msg.startsWith(cmd.toLowerCase())) {
@@ -51,6 +56,10 @@ public class GameEventListener implements Listener {
 
         for (Arena arena : plugin.getArenaManager().getArenas()) {
             if (arena.isRunning() && arena.getActivePlayers().contains(p.getUniqueId())) {
+                // Vymazat pouze dropy z minihry pri smrti
+                e.getDrops().clear();
+                e.setDroppedExp(0);
+
                 arena.getActivePlayers().remove(p.getUniqueId());
                 arena.getSpectators().add(p.getUniqueId());
 
