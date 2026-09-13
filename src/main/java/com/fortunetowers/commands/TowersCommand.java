@@ -11,7 +11,6 @@ import java.util.*;
 public class TowersCommand implements CommandExecutor, TabCompleter {
 
     private final FortuneTowers plugin;
-    private final Map<String, Map<String, Long>> creationState = new HashMap<>();
     private final Map<String, Long> removeConfirmations = new HashMap<>();
 
     public TowersCommand(FortuneTowers plugin) {
@@ -28,6 +27,22 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             if (!sender.hasPermission("towers.permission.reload")) return noPerm(sender);
             plugin.reloadConfig();
             sender.sendMessage(plugin.getMsg("reloaded"));
+            return true;
+        }
+
+        if (sub.equals("setmainlobby") && sender instanceof Player p) {
+            if (!p.hasPermission("towers.permission.setmainlobby")) return noPerm(p);
+            plugin.getConfig().set("main-lobby", p.getLocation());
+            plugin.saveConfig();
+            p.sendMessage(plugin.getMsg("mainlobby-set"));
+            return true;
+        }
+
+        if (sub.equals("removemainlobby")) {
+            if (!sender.hasPermission("towers.permission.removemainlobby")) return noPerm(sender);
+            plugin.getConfig().set("main-lobby", null);
+            plugin.saveConfig();
+            sender.sendMessage(plugin.getMsg("mainlobby-removed"));
             return true;
         }
 
@@ -201,12 +216,39 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> suggestions = new ArrayList<>();
+
         if (args.length == 1) {
-            return Arrays.asList("arena", "join", "leave", "start", "stop", "reload");
+            return Arrays.asList("arena", "join", "leave", "start", "stop", "setmainlobby", "removemainlobby", "reload");
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("arena")) {
-            return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setlobby", "removelobby", "interval", "remove");
+
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("arena")) {
+                return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setlobby", "removelobby", "interval", "remove");
+            }
+            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("leave") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop")) {
+                for (Arena a : plugin.getArenaManager().getArenas()) {
+                    suggestions.add(a.getName());
+                }
+                return suggestions;
+            }
         }
+
+        if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("arena")) {
+                for (Arena a : plugin.getArenaManager().getArenas()) {
+                    suggestions.add(a.getName());
+                }
+                return suggestions;
+            }
+            if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("leave")) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    suggestions.add(p.getName());
+                }
+                return suggestions;
+            }
+        }
+
         return Collections.emptyList();
     }
 }
