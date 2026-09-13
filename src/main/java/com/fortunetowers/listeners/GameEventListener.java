@@ -3,6 +3,7 @@ package com.fortunetowers.listeners;
 import com.fortunetowers.FortuneTowers;
 import com.fortunetowers.objects.Arena;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.List;
@@ -72,7 +74,6 @@ public class GameEventListener implements Listener {
                 String sub = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.death-subtitle"));
                 p.sendTitle(title, sub, 10, 40, 10);
 
-                // Preskoceni death screenu
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                     p.spigot().respawn();
                 }, 2L);
@@ -89,10 +90,9 @@ public class GameEventListener implements Listener {
 
         for (Arena arena : plugin.getArenaManager().getArenas()) {
             if (arena.getSpectators().contains(p.getUniqueId())) {
-                if (!arena.getSpawns().isEmpty()) {
-                    e.setRespawnLocation(arena.getSpawns().get(0));
-                } else if (arena.getLobby() != null) {
-                    e.setRespawnLocation(arena.getLobby());
+                Location specLoc = arena.getSpectatorSpawnLocation();
+                if (specLoc != null) {
+                    e.setRespawnLocation(specLoc);
                 }
 
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -105,7 +105,17 @@ public class GameEventListener implements Listener {
         }
     }
 
-    // Blokace interakci pro pseudo-spectatora
+    @EventHandler
+    public void onInteract(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        for (Arena arena : plugin.getArenaManager().getArenas()) {
+            if (arena.getSpectators().contains(p.getUniqueId())) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+    }
+
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof Player p) {
