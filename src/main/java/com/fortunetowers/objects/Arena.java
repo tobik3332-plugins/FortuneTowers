@@ -19,8 +19,10 @@ public class Arena {
     private Location specSpawn;
     private final List<Location> spawns = new ArrayList<>();
     private int intervalSeconds = 3;
+    private int afterGameSeconds = 5;
 
     private boolean running = false;
+    private boolean ending = false;
     private final Set<UUID> activePlayers = new HashSet<>();
     private final Set<UUID> spectators = new HashSet<>();
     private final List<BlockState> originalBlocks = new ArrayList<>();
@@ -75,6 +77,7 @@ public class Arena {
 
     public void start() {
         this.running = true;
+        this.ending = false;
         saveSnapshot();
 
         int spawnIndex = 0;
@@ -138,22 +141,36 @@ public class Arena {
     }
 
     public void checkWinner() {
-        if (!running) return;
+        if (!running || ending) return;
 
         if (activePlayers.size() == 1) {
+            ending = true;
             UUID winnerUUID = activePlayers.iterator().next();
             Player winner = Bukkit.getPlayer(winnerUUID);
-            if (winner != null) {
-                broadcast(FortuneTowers.getInstance().getMsg("game-winner-broadcast").replace("%player%", winner.getName()));
+            String winnerName = winner != null ? winner.getName() : "Neznamy";
+
+            broadcast(FortuneTowers.getInstance().getMsg("game-winner-broadcast").replace("%player%", winnerName));
+
+            String title = ChatColor.translateAlternateColorCodes('&', FortuneTowers.getInstance().getConfig().getString("messages.winner-title").replace("%player%", winnerName));
+            String sub = ChatColor.translateAlternateColorCodes('&', FortuneTowers.getInstance().getConfig().getString("messages.winner-subtitle").replace("%player%", winnerName));
+
+            Set<UUID> all = new HashSet<>(activePlayers);
+            all.addAll(spectators);
+            for (UUID uuid : all) {
+                Player p = Bukkit.getPlayer(uuid);
+                if (p != null) p.sendTitle(title, sub, 10, 60, 10);
             }
-            stop();
+
+            Bukkit.getScheduler().runTaskLater(FortuneTowers.getInstance(), this::stop, 20L * afterGameSeconds);
         } else if (activePlayers.isEmpty()) {
+            ending = true;
             stop();
         }
     }
 
     public void stop() {
         this.running = false;
+        this.ending = false;
         if (itemTask != null) itemTask.cancel();
         if (borderTask != null) borderTask.cancel();
 
@@ -252,7 +269,10 @@ public class Arena {
     public List<Location> getSpawns() { return spawns; }
     public int getIntervalSeconds() { return intervalSeconds; }
     public void setIntervalSeconds(int intervalSeconds) { this.intervalSeconds = intervalSeconds; }
+    public int getAfterGameSeconds() { return afterGameSeconds; }
+    public void setAfterGameSeconds(int afterGameSeconds) { this.afterGameSeconds = afterGameSeconds; }
     public boolean isRunning() { return running; }
+    public boolean isEnding() { return ending; }
     public Set<UUID> getActivePlayers() { return activePlayers; }
     public Set<UUID> getSpectators() { return spectators; }
 }
