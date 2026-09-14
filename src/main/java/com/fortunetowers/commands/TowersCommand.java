@@ -165,6 +165,18 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
+            if (action.equals("aftergame") && args.length >= 4) {
+                if (!sender.hasPermission("towers.permission.arena.aftergame")) return noPerm(sender);
+                Arena arena = plugin.getArenaManager().getArena(args[2]);
+                if (arena != null) {
+                    int sec = Integer.parseInt(args[3]);
+                    arena.setAfterGameSeconds(sec);
+                    plugin.getArenaManager().saveArena(arena);
+                    sender.sendMessage(plugin.getMsg("aftergame-set").replace("%arena%", arena.getName()).replace("%sec%", String.valueOf(sec)));
+                }
+                return true;
+            }
+
             if (action.equals("remove") && args.length >= 3) {
                 if (!sender.hasPermission("towers.permission.arena.remove")) return noPerm(sender);
                 String name = args[2];
@@ -267,7 +279,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("arena")) {
-                return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setspecspawn", "removespecspawn", "setlobby", "removelobby", "interval", "remove");
+                return Arrays.asList("create", "pos1", "pos2", "addspawn", "removespawn", "setspecspawn", "removespecspawn", "setlobby", "removelobby", "interval", "aftergame", "remove");
             }
             if (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("joinspec") || args[0].equalsIgnoreCase("leave") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop")) {
                 for (Arena a : plugin.getArenaManager().getArenas()) {
