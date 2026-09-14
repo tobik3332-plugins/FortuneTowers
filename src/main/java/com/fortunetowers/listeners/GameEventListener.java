@@ -90,16 +90,22 @@ public class GameEventListener implements Listener {
 
         for (Arena arena : plugin.getArenaManager().getArenas()) {
             if (arena.getSpectators().contains(p.getUniqueId())) {
-                Location specLoc = arena.getSpectatorSpawnLocation();
-                if (specLoc != null) {
-                    e.setRespawnLocation(specLoc);
+                if (arena.isEnding() || !arena.isRunning()) {
+                    Location mainLobby = plugin.getConfig().getLocation("main-lobby");
+                    if (mainLobby != null) {
+                        e.setRespawnLocation(mainLobby);
+                    }
+                } else {
+                    Location specLoc = arena.getSpectatorSpawnLocation();
+                    if (specLoc != null) {
+                        e.setRespawnLocation(specLoc);
+                    }
+
+                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                        arena.makeSpectator(p);
+                        arena.updateVisibility();
+                    }, 2L);
                 }
-
-                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                    arena.makeSpectator(p);
-                    arena.updateVisibility();
-                }, 2L);
-
                 break;
             }
         }
