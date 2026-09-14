@@ -48,6 +48,7 @@ public class ArenaManager {
             arena.setLobby(config.getLocation(key + ".lobby"));
             arena.setSpecSpawn(config.getLocation(key + ".specspawn"));
             arena.setIntervalSeconds(config.getInt(key + ".interval", 3));
+            arena.setAfterGameSeconds(config.getInt(key + ".aftergame", 5));
 
             List<?> list = config.getList(key + ".spawns");
             if (list != null) {
@@ -69,6 +70,7 @@ public class ArenaManager {
         config.set(key + ".lobby", arena.getLobby());
         config.set(key + ".specspawn", arena.getSpecSpawn());
         config.set(key + ".interval", arena.getIntervalSeconds());
+        config.set(key + ".aftergame", arena.getAfterGameSeconds());
         config.set(key + ".spawns", arena.getSpawns());
 
         try {
